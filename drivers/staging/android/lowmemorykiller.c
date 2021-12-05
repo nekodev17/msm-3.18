@@ -386,6 +386,10 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 {
 	struct task_struct *tsk;
 	struct task_struct *selected = NULL;
+// add by HQ_gongpc for multi-killer @{
+	struct task_struct *selected1 = NULL;
+	struct task_struct *selected2 = NULL;
+// add by HQ_gongpc for multi-killer @}
 	unsigned long rem = 0;
 	int tasksize;
 	int i;
@@ -394,6 +398,11 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 	int minfree = 0;
 	int selected_tasksize = 0;
 	short selected_oom_score_adj;
+// add by HQ_gongpc for multi-killer @{
+	int selected_tasksize1 = 0;
+	int selected_tasksize2 = 0;
+	short selected_oom_score_adj1;
+// add by HQ_gongpc for multi-killer @}
 	int array_size = ARRAY_SIZE(lowmem_adj);
 	int other_free;
 	int other_file;
@@ -440,6 +449,9 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 	}
 
 	selected_oom_score_adj = min_score_adj;
+// add by HQ_gongpc for multi-killer @{
+	selected_oom_score_adj1 = min_score_adj;
+// add by HQ_gongpc for multi-killer @}
 
 	rcu_read_lock();
 	for_each_process(tsk) {
@@ -476,6 +488,32 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 		task_unlock(p);
 		if (tasksize <= 0)
 			continue;
+// add by HQ_gongpc for multi-killer @{
+		if (selected1){
+			if (oom_score_adj < selected_oom_score_adj1){
+				continue;
+			}
+        }
+		if (selected1 && oom_score_adj > lowmem_adj[2]){
+		    if (tasksize > selected_tasksize1){
+				selected1 = p;
+				selected_tasksize1 = tasksize;
+			}else{
+				if (selected2){
+				    if (tasksize > selected_tasksize2){
+				        selected2 = p;
+				        selected_tasksize2 = tasksize;
+				    }
+				}else{
+				    selected2 = p;
+				    selected_tasksize2 = tasksize;
+				}
+			}
+		}else if (oom_score_adj > lowmem_adj[2]){
+			selected1 = p;
+			selected_tasksize1 = tasksize;
+		}
+// add by HQ_gongpc for multi-killer @}
 		if (selected) {
 			if (oom_score_adj < selected_oom_score_adj)
 				continue;
@@ -530,6 +568,18 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 		set_tsk_thread_flag(selected, TIF_MEMDIE);
 		send_sig(SIGKILL, selected, 0);
 		rem += selected_tasksize;
+// add by HQ_gongpc for multi-killer @{
+        if (selected1 && selected1 != selected){
+		    set_tsk_thread_flag(selected1, TIF_MEMDIE);
+		    send_sig(SIGKILL, selected1, 0);
+		    rem += selected_tasksize1;
+        }
+        if (selected2 && selected2 != selected){
+		    set_tsk_thread_flag(selected2, TIF_MEMDIE);
+		    send_sig(SIGKILL, selected2, 0);
+		    rem += selected_tasksize2;
+        }
+// add by HQ_gongpc for multi-killer @}
 		rcu_read_unlock();
 		/* give the system time to free up the memory */
 		msleep_interruptible(20);

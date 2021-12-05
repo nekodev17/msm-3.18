@@ -90,7 +90,7 @@
 #endif
 
 static int kernel_init(void *);
-
+char *condor_flag = {0};//Murphy add for Condor 1593
 extern void init_IRQ(void);
 extern void fork_init(unsigned long);
 extern void radix_tree_init(void);
@@ -758,6 +758,19 @@ static bool __init_or_module initcall_blacklisted(initcall_t fn)
 }
 #endif
 __setup("initcall_blacklist=", initcall_blacklist);
+
+static int __init get_bootup_rease(char *str)
+{
+	printk("[Murphy]%s:%s",__func__,str);
+	if (0 == strcmp("true", str)) {
+		condor_flag = "true";
+	}else {
+		condor_flag = "false";
+	}
+	return 0;
+}
+
+__setup("androidboot.bootup=", get_bootup_rease);
 
 static int __init_or_module do_one_initcall_debug(initcall_t fn)
 {

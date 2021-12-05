@@ -628,7 +628,6 @@ static int mmc_blk_ioctl_cmd(struct block_device *bdev,
 		err = -EPERM;
 		goto cmd_err;
 	}
-
 	md = mmc_blk_get(bdev->bd_disk);
 	if (!md) {
 		err = -EINVAL;

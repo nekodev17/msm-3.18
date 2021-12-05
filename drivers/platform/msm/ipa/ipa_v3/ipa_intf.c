@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -290,6 +290,7 @@ int ipa3_query_intf_tx_props(struct ipa_ioc_query_intf_tx_props *tx)
 		}
 	}
 	mutex_unlock(&ipa3_ctx->lock);
+
 	return result;
 }
 
@@ -336,6 +337,7 @@ int ipa3_query_intf_rx_props(struct ipa_ioc_query_intf_rx_props *rx)
 		}
 	}
 	mutex_unlock(&ipa3_ctx->lock);
+
 	return result;
 }
 
